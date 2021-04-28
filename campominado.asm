@@ -18,59 +18,46 @@ usuario:                    # matriz visualizada pelo usuário
         .word   -1,-1,-1,-1,-1,-1,-1,-1
         .word   -1,-1,-1,-1,-1,-1,-1,-1
         .word   -1,-1,-1,-1,-1,-1,-1,-1
-        .word   -1,-1,-1,-1,-1,-1,-1,-1
+#        .word   -1,-1,-1,-1,-1,-1,-1,-1
         
 campo:			.space		256   # esta versão suporta campo de até 9 x 9 posições de memória
-        
-#campo:                      # matriz campo inicializada com zeros
- #       .word   0,9,0,0,0,0,0,0
- #       .word   0,0,0,0,0,0,0,0
-  #      .word   0,0,0,0,0,0,9,0
-   #     .word   9,0,0,0,0,0,0,0
-    #    .word   0,0,0,0,0,0,0,0
-     #   .word   0,0,0,0,0,0,0,0
-      #  .word   0,0,0,9,0,0,0,0
-       # .word   0,0,0,0,0,0,0,0
-       
-
 salva_S0:		.word		0
 salva_ra:		.word		0
 salva_ra1:		.word		0
         
 
-coordena:		.string		"\nDigite as coordenadas do campo minado (linha/coluna):\n"
-tam_camp:		.string		"\nDigite o tamanho do campo minado entre 5 (5x5), 7 (7x7) ou 9 (9x9): "
-fim_jogo:		.string		"\nA BOMBA EXPLODIU! VOCE PERDEU!\n"
-campomin:		.string		"\nVEJA A SITUACAO DO CAMPO MINADO:\n"
-coordinv:		.string		"\nA JOGADA ESCOLHIDA EH INVALIDA. TENTE NOVAMENTE!\n"
+abrir:			.string		"\n1 - Abrir Posição"
+ins_flag:		.string		"\n2 - Inserir/Remover Bandeira\n"
+opcao:			.string		"\nEscolha uma opção: "
+op_invalida:		.string		"\n Opção Inválida!\n"
+coordena:		.string		"\nDigite as coordenadas do campo minado (linha/coluna)(de 0 a 7):\n"
+fim_jogo:		.string		"\nA BOMBA EXPLODIU! VOCE PERDEU!\n\n"
+campomin:		.string		"\nCAMPO MINADO:\n"
+coordinv:		.string		"\nA JOGADA INVALIDA. TENTE NOVAMENTE!\n"
+band:			.string		"\nPOSIÇÃO COM BANDEIRA\n"
+n_band:			.string		"\nBandeiras disponíveis: "
+semflag:		.string		"\nSem Bandeiras disponíveis\n"
 novalinh:		.string		"\n"
 novbarra:		.string		"|"
 novespac:		.string		" "
-imprnove:		.string		" 9"
-taminval:		.string		"\nA ESCOLHA DE TAMANHO DO CAMPO EH INVALIDA. TENTE NOVAMENTE!"
+imprnove:		.string		" 9 "
+imprflag:		.string		" F "
+fechado:		.string		" - "
+win:			.string		"\nVOCÊ VENCEU!!!\n\n"
+
+
+
 
 	    .text
 main:
-       # la  a0, tam_camp       # imprime mensagem para escolher tamanho do campo
-       # li  a7, 4              # seta valor de operação para string        
-       # ecall                 # imprime string
-
-       # li  a7, 5		# seta valor de operação para pegar valor digitado pelo usuário	
-       # ecall                 # pede para digitar tamanho do campo (num_linhas)
 
         addi a1, zero, 8     # salva valor digitado em num_linhas
         addi a4, zero, 1
         addi s5, zero, 9
         addi s6, zero, -1
-        #beq a1, 5, else        # verifica se a escolha de tamanho do campo é válida
-        #beq a1, 7, else        # verifica se a escolha de tamanho do campo é válida
-        #beq a1, 9, else        # verifica se a escolha de tamanho do campo é válida
-        #la  a0, taminval       # imprime mensagem de tamanho do campo invalido
-        #li  a7, 4              # seta valor de operação para string
-        #ecall                 # imprime string
-        #j main                  # volta para main para escolher novamente o tamanho do campo
+        addi s7, zero, 2
+        addi s9, zero, 15
 
-        #else:
         add a3, zero, zero   # seta valor para a variável de controle o fim do jogo
 
         la a0, campo           # parâmetro da matriz campo (int * campo[])
@@ -82,14 +69,48 @@ main:
         add a1, a1, zero     # parâmetro do tamanho da matriz campo (int num_linhas)
         jal calcula_bombas      # chama função para calcular todas as bombas ao redor de todas as posições
 
-        continua_main0:
+continua_main0:
         la a0, campo           # parâmetro da matriz campo
         add a1, a1, zero     # parâmetro do tamanho da matriz campo
         la a2, usuario         # parâmetro da matriz usuario
         add a3, a3, zero     # parâmetro da variável de fim de jogo
         jal mostra_campo        # printa campo minado
+        
+        #verifica vitoria
+        
+        beq s8, zero, vitoria
+        
+        #abrir posição ou inserir bandeira?
+        la  a0, abrir       
+        li  a7, 4              
+        ecall           
+        
+        la  a0, ins_flag       # imprime mensagem para inserir posição
+        li  a7, 4              # seta valor de operação para string
+        ecall                 # imprime string    
 
-        continua_main1:
+        
+	la  a0, opcao       # imprime mensagem para inserir posição
+        li  a7, 4              # seta valor de operação para string
+        ecall                 # imprime string    
+        
+        li  a7, 5              # seta valor de operação para pegar valor digitado pelo usuário
+        ecall                 # pede para digitar coordenada linha (y)
+        add t5, zero, a0
+        
+        #verifica_opção
+        beq a0, a4, continua_main1
+        beq a0, s7, continua_main1
+        
+        la  a0, op_invalida       
+        li  a7, 4              
+        ecall
+        
+        j continua_main0
+        
+
+
+continua_main1:
         la  a0, coordena       # imprime mensagem para inserir posição
         li  a7, 4              # seta valor de operação para string
         ecall                 # imprime string
@@ -97,12 +118,12 @@ main:
         li  a7, 5              # seta valor de operação para pegar valor digitado pelo usuário
         ecall                 # pede para digitar coordenada linha (y)
         add t1, zero, a0     # y (linhas)
-        #subi t1, t1, 1        # y-- (linhas)
+        
 
         li  a7, 5              # seta valor de operação para pegar valor digitado pelo usuário
         ecall                 # pede para digitar coordenada coluna (x)
         add t0, zero, a0     # x (colunas)
-        #subi t0, t0, 1        # x-- (colunas)
+        
 
         slt t4, t0, a1       # verifica se escolha de coordenada x é maior que o num_linhas
         beq t4, a4, else1
@@ -111,7 +132,7 @@ main:
         ecall                 # imprime string
         j continua_main1        # volta para continua_main1 para escolher novamente a coordenada da matriz
 
-        else1:
+else1:
         slt t4, t1, a1       # verifica se escolha de coordenada y é maior que o num_linhas
         beq t4, a4, else2
         la  a0, coordinv       # imprime mensagem de coordernadas invalidas
@@ -119,7 +140,7 @@ main:
         ecall                 # imprime string
         j continua_main1        # volta para continua_main1 para escolher novamente a coordenada da matriz
 
-        else2:
+else2:
         sltz t4, t0     # verifica se escolha de coordenada x é menor ou igual a 0
         beq t4, zero, else3
         la  a0, coordinv       # imprime mensagem de coordernadas invalidas
@@ -127,7 +148,7 @@ main:
         ecall                 # imprime string
         j continua_main1        # volta para continua_main1 para escolher novamente a coordenada da matriz
 
-        else3:
+else3:
         sltz t4, t1     # verifica se escolha de coordenada y é menor ou igual a 0
         beq t4, zero, else4
         la  a0, coordinv       # imprime mensagem de coordernadas invalidas
@@ -135,7 +156,11 @@ main:
         ecall                 # imprime string
         j continua_main1        # volta para continua_main1 para escolher novamente a coordenada da matriz 
         
-        else4:
+else4:
+	#verificar se é abrir ou bandeira
+	beq t5, s7, bandeira
+	
+	
         # variável para controle de posição da matriz:
         #(linha * numero_Colunas) + coluna
         mul s1, t1, a1         # posição_matriz = y * ordem da matriz (9)
@@ -151,6 +176,16 @@ main:
         la a2, usuario
         add a5, a2, s1
         sw  s3, (a5)   # salva valor de campo[x][y] em usuario[x][y]
+        
+        
+        
+        
+        #verifica se tem uma bandeira na posição
+        
+        bgt s3, s5, tem_flag
+        
+        
+        
         # verifica se há bomba na posição digitada pelo usuário para finalizar o jogo
         bne s3, s5, continua
         addi a3, zero, 1      # seta variável de fim de jogo para 1
@@ -165,14 +200,108 @@ main:
         jal mostra_campo        # imprime o campo minado pela ultima vez com as bombas
         j final                 # finaliza o jogo
         
-        continua:
+
+
+bandeira:
+	
+	mul s1, t1, a1         # posição_matriz = y * ordem da matriz (9)
+        add s1, s1, t0       # posição_matriz += x
+        addi a5, zero, 4
+        mul s1, s1, a5         # posição_matriz *= 4 (para cálculo da posição)
+        
+        la a0, campo
+        add a5, a0, s1
+
+        lw  s3, (a5)     # salva endereço da posição campo
+        
+	bgt s3, s5, tira_flag
+	beq s9, zero, zero_flag
+	
+	addi s3, s3, 10
+	addi s9, s9, -1
+	
+	sw s3, (a5)
+	
+	la a2, usuario
+        add a5, a2, s1
+        sw  s3, (a5)
+        
+        
+        la  a0, n_band       
+        li  a7, 4              
+        ecall
+        
+        li a7, 1               
+        add a0, s9, zero    
+        ecall
+        
+        la  a0, novalinh       
+        li  a7, 4              
+        ecall
+	
+	j	continua
+	
+	
+tira_flag:
+	
+	addi s3, s3, -10
+	addi s9, s9, 1
+	
+	sw s3, (a5)
+	
+	la a2, usuario
+        add a5, a2, s1
+        sw  s6, (a5)
+        
+        
+        la  a0, n_band       
+        li  a7, 4              
+        ecall
+        
+        li a7, 1               
+        add a0, s9, zero    
+        ecall
+        
+        la  a0, novalinh       
+        li  a7, 4              
+        ecall
+	
+	j	continua
+	
+
+
+zero_flag:
+	
+	la  a0, semflag       
+        li  a7, 4              
+        ecall
+	
+	
+	j	continua
+	
+	
+	      
+tem_flag:
+	
+	la  a0, band       
+        li  a7, 4              
+        ecall     
+	j	continua
+        
+
+        
+continua:
         j continua_main0        # continua o jogo printando o campo minado e pedindo outra coordenada
+        
+
 
 mostra_campo:                   # void mostra_campo(int * campo[], int num_linhas, int * usuario[], int fim_jogo);
         # essa função imprimirá a matriz usuario, mas necessita da matriz campo e da variável fim_jogo para saber
         # se será impresso uma bomba ou não
         
         add s4, a0, zero     # salva endereço da matriz campo
+        
+        add s8, zero, zero
 
 	la  a0, campomin       # imprime mensagem para mostrar campo minado
         li  a7, 4              # seta valor de operação para string
@@ -180,13 +309,13 @@ mostra_campo:                   # void mostra_campo(int * campo[], int num_linha
 
         add t2, zero, zero   # reseta variável do laço que percorre as linhas
 
-        for:
+for:
         addi t3, zero, -1     # reseta variável do laço que percorre as colunas; é setado com valor -1 
         # pelo fato de haver um "continue" na função, necessitando de um ++ no início do laço para
         # ignorar a posição da matriz que o chamou e para começar da posição 0 e não da posição 1
         beq t2, a1, exit      # verifica fim do for
 
-        for2:
+for2:
         addi t3, t3, 1        # aumenta contador de colunas
         beq t3, a1, exit1     # verifica fim do for2
 
@@ -207,7 +336,7 @@ mostra_campo:                   # void mostra_campo(int * campo[], int num_linha
         # verifica variável de fim de jogo para saber o que imprimir; se a posição é bomba entao 
         # imprime a bomba e não a posição da matriz usuario, depois retorna, como um "continue",
         # para o laço continuar a imprimir as demais posições
-        bne a3, a4, if20        
+        bne a3, a4, if20  	#verifica gameover    
         bne t5, s5, if20        # verifica se a posição da matriz campo[x1][y1] == 9
         # imprime valor 9
         la a0, imprnove        # carrega string
@@ -215,23 +344,46 @@ mostra_campo:                   # void mostra_campo(int * campo[], int num_linha
         ecall                 # imprime string
         j for2                  # volta para for2 porque o valor é bomba
 
-        if20:                   
+if20:                   
         # verifica necessidade de imprimir um espaço, servindo como forma de justificacao de impressão 
         # do campo minado, pois "-1" ocupa o espaço de dois char
         beq s3, s6, if21
+        bgt s3, s5, if22
         # imprime um espaço
         la a0, novespac        # carrega string
         li a7, 4               # seta valor de operação para string
         ecall                 # imprime string
-
-        if21:
-        # imprime as posições
+        
         li a7, 1               # seta valor de operação para integer
         add a0, s3, zero     # salva valor de s3 em a0 para ser impresso
         ecall                 # imprime string
+        
+        la a0, novespac        # carrega string
+        li a7, 4               # seta valor de operação para string
+        ecall                 # imprime string
+
+        j for2  
+
+if21:
+        # imprime as posições
+        la a0, fechado
+        li a7, 4               # seta valor de operação para integer
+        ecall                 # imprime string
+        
+        addi s8, s8, 1
 
         j for2                  # volta para for2
-        exit1:
+        
+        
+if22:
+	
+        la a0, imprflag
+        li a7, 4               # seta valor de operação para integer
+        ecall                 # imprime string
+
+        j for2                  # volta para for2
+
+exit1:
         # imprime uma barra
         la a0, novbarra        # carrega string
         li a7, 4               # seta valor de operação para string
@@ -242,7 +394,7 @@ mostra_campo:                   # void mostra_campo(int * campo[], int num_linha
         ecall                 # imprime string
         addi t2, t2, 1        # aumenta contador de linha
         j for                   # volta para for
-        exit:
+exit:
         
         ret
 
@@ -250,13 +402,13 @@ calcula_bombas:                 # void calcula_bombas(int * campo[], int num_lin
         add s2, a1, zero        # num_linhas - 1
         add t2, zero, zero   # reseta variável do laço que percorre as linhas
 
-        for10:
+for10:
         addi t3, zero, -1     # reseta variável do laço que percorre as colunas; é setado com valor -1 
         # pelo fato de haver um "continue" na função, necessitando de um ++ no início do laço para
         # ignorar a posição da matriz que o chamou e para começar da posição 0 e não da posição 1
         beq t2, a1, fim1      # verifica fim do for10
 
-        for11:
+for11:
         add s0, zero, zero   # reseta contador de bombas
         addi t3, t3, 1        # aumenta contador de colunas
         beq t3, a1, fim2      # verifica fim do for11
@@ -275,7 +427,7 @@ calcula_bombas:                 # void calcula_bombas(int * campo[], int num_lin
         bne s3, s5, if01        # verifica se posição da matriz campo[x1][y1] == 9
         j for11                 # volta para for11 porque o valor é bomba
 
-        if01:
+if01:
 
         addi s3, s1, -4        # posição_matriz -= 4 (M[x1-1][y1])
         addi s3, s3, -32       # posição_matriz -= 36 (M[x1-1][y1-1])
@@ -287,7 +439,7 @@ calcula_bombas:                 # void calcula_bombas(int * campo[], int num_lin
         bne s3, s5, if02        # verifica campo[x1 - 1][y1 - 1] == 9
         addi s0, s0, 1        # i++
 
-        if02:
+if02:
         addi s3, s1, -32       # posição_matriz -= 36 (M[x1][y1-1])
         add s3, s3, a0       # calcula endereço da matriz a ser verificado se o dado é uma bomba
         lw  s3, 0(s3)         # salva posição da matriz
@@ -296,7 +448,7 @@ calcula_bombas:                 # void calcula_bombas(int * campo[], int num_lin
         bne s3, s5, if03        # verifica campo[x1][y1 - 1] == 9
         addi s0, s0, 1        # i++
 
-        if03:
+if03:
         addi s3, s1, 4        # posição_matriz += 4 (M[x1+1][y1])
         addi s3, s3, -32       # posição_matriz -= 36 (M[x1+1][y1-1])
         add s3, s3, a0       # calcula endereço da matriz a ser verificado se o dado é uma bomba
@@ -307,7 +459,7 @@ calcula_bombas:                 # void calcula_bombas(int * campo[], int num_lin
         bne s3, s5, if04        # verifica campo[x1 + 1][y1 - 1] == 9
         addi s0, s0, 1        # i++
 
-        if04:
+if04:
         addi s3, s1, -4        # posição_matriz -= 4 (M[x1-1][y1]) 
         add s3, s3, a0       # calcula endereço da matriz a ser verificado se o dado é uma bomba
         lw  s3, 0(s3)         # salva posição da matriz
@@ -316,7 +468,7 @@ calcula_bombas:                 # void calcula_bombas(int * campo[], int num_lin
         bne s3, s5, if05        # verifica campo[x1 - 1][y1] == 9
         addi s0, s0, 1        # i++
 
-        if05:
+if05:
         addi s3, s1, 4        # posição_matriz += 4 (M[x1+1][y1]) 
         add s3, s3, a0       # calcula endereço da matriz a ser verificado se o dado é uma bomba
         lw  s3, 0(s3)         # salva posição da matriz
@@ -325,7 +477,7 @@ calcula_bombas:                 # void calcula_bombas(int * campo[], int num_lin
         bne s3, s5, if06        # verifica campo[x1 + 1][y1] == 9
         addi s0, s0, 1        # i++
 
-        if06:
+if06:
         addi s3, s1, -4        # posição_matriz -= 4 (M[x1-1][y1])
         addi s3, s3, 32       # posição_matriz += 36 (M[x1-1][y1+1])
         add s3, s3, a0       # calcula endereço da matriz a ser verificado se o dado é uma bomba
@@ -336,7 +488,7 @@ calcula_bombas:                 # void calcula_bombas(int * campo[], int num_lin
         bne s3, s5, if07        # verifica campo[x1 - 1][y1 + 1] == 9
         addi s0, s0, 1        # i++
 
-        if07:
+if07:
         addi s3, s1, 32       # posição_matriz += 36 (M[x1][y1+1])
         add s3, s3, a0       # calcula endereço da matriz a ser verificado se o dado é uma bomba
         lw  s3, 0(s3)         # salva posição da matriz
@@ -345,7 +497,7 @@ calcula_bombas:                 # void calcula_bombas(int * campo[], int num_lin
         bne s3, s5, if08        # verifica campo[x1][y1 + 1] == 9
         addi s0, s0, 1        # i++
 
-        if08:
+if08:
         addi s3, s1, 4        # posição_matriz += 4 (M[x1+1][y1])
         addi s3, s3, 32       # posição_matriz += 36 (M[x1+1][y1+1])
         add s3, s3, a0       # calcula endereço da matriz a ser verificado se o dado é uma bomba
@@ -356,17 +508,17 @@ calcula_bombas:                 # void calcula_bombas(int * campo[], int num_lin
         bne s3, s5, continua1   # verifica se campo[x1 + 1][y1 + 1] == 9
         addi s0, s0, 1        # i++
 
-        continua1:
+continua1:
         add s3, s1, a0       # calcula endereço da matriz na qual o dado vai ser substituido 
                                 # pelo numero de bombas que ha ao seu redor 
         sw  s0, 0(s3)         # seta o valor de bombas ao redor da posição
         j for11                 # volta para for11
 
-        fim2:
+fim2:
         addi t2, t2, 1        # aumenta contador de linhas da matriz
         j for10                 # volta para for10
 
-        fim1:
+fim1:
         ret
 
 insere_bombas:                  # void insere_bombas(int * campo[], int num_linhas);
@@ -380,7 +532,7 @@ insere_bombas:                  # void insere_bombas(int * campo[], int num_linh
 		add 	t1, zero, a1		# salva a1 em t1 - quantidade de linhas 
 
 QTD_BOMBAS:
-		addi 	t2, zero, 10 		# seta para 15 bombas	
+		addi 	t2, zero, 15 		# seta para 15 bombas	
 		add 	t3, zero, zero 	# inicia contador de bombas com 0
 		addi 	a7, zero, 30 		# ecall 30 pega o tempo do sistema em milisegundos (usado como semente
 		ecall 				
@@ -469,6 +621,12 @@ EH_POSITIVO:
 ############################################################################
 
        # ret
+
+vitoria:
+	la  a0, win       
+        li  a7, 4              
+        ecall
+	ebreak
 
 final:
 	ebreak
