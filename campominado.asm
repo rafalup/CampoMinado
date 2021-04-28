@@ -8,35 +8,37 @@
     # s2 = num_linhas - 1                  t5 = posição da matriz    
     # s3 = posição da matriz
 
-        .data
+	.data
+	
+	
 usuario:                    # matriz visualizada pelo usuário
-        .word   -1,-1,-1,-1,-1,-1,-1,-1
-        .word   -1,-1,-1,-1,-1,-1,-1,-1
-        .word   -1,-1,-1,-1,-1,-1,-1,-1
-        .word   -1,-1,-1,-1,-1,-1,-1,-1
-        .word   -1,-1,-1,-1,-1,-1,-1,-1
-        .word   -1,-1,-1,-1,-1,-1,-1,-1
-        .word   -1,-1,-1,-1,-1,-1,-1,-1
-        .word   -1,-1,-1,-1,-1,-1,-1,-1
-#        .word   -1,-1,-1,-1,-1,-1,-1,-1
-        
+	.word   -1,-1,-1,-1,-1,-1,-1,-1
+	.word   -1,-1,-1,-1,-1,-1,-1,-1
+	.word   -1,-1,-1,-1,-1,-1,-1,-1
+	.word   -1,-1,-1,-1,-1,-1,-1,-1
+	.word   -1,-1,-1,-1,-1,-1,-1,-1
+	.word   -1,-1,-1,-1,-1,-1,-1,-1
+	.word   -1,-1,-1,-1,-1,-1,-1,-1
+	.word   -1,-1,-1,-1,-1,-1,-1,-1
+	.word   -1,-1,-1,-1,-1,-1,-1,-1
+
 campo:			.space		256   # esta versão suporta campo de até 9 x 9 posições de memória
 salva_S0:		.word		0
 salva_ra:		.word		0
 salva_ra1:		.word		0
-        
 
 abrir:			.string		"\n1 - Abrir Posição"
 ins_flag:		.string		"\n2 - Inserir/Remover Bandeira\n"
 opcao:			.string		"\nEscolha uma opção: "
-op_invalida:		.string		"\n Opção Inválida!\n"
-coordena:		.string		"\nDigite as coordenadas do campo minado (linha/coluna)(de 0 a 7):\n"
+op_invalida:		.string		"\nOpção Inválida!\n"
+coordena:		.string		"\nDigite a posição do campo minado (linha/coluna)(de 0 a 7):\n"
 fim_jogo:		.string		"\nA BOMBA EXPLODIU! VOCE PERDEU!\n\n"
-campomin:		.string		"\nCAMPO MINADO:\n"
+campomin:		.string		"\nCAMPO MINADO\n\n"
 coordinv:		.string		"\nA JOGADA INVALIDA. TENTE NOVAMENTE!\n"
 band:			.string		"\nPOSIÇÃO COM BANDEIRA\n"
 n_band:			.string		"\nBandeiras disponíveis: "
 semflag:		.string		"\nSem Bandeiras disponíveis\n"
+aberto:			.string		"\nPOSIÇÃO JÁ ABERTA!\n"
 novalinh:		.string		"\n"
 novbarra:		.string		"|"
 novespac:		.string		" "
@@ -48,26 +50,28 @@ win:			.string		"\nVOCÊ VENCEU!!!\n\n"
 
 
 
-	    .text
+	.text
+	
+	
 main:
 
-        addi a1, zero, 8     # salva valor digitado em num_linhas
-        addi a4, zero, 1
-        addi s5, zero, 9
-        addi s6, zero, -1
-        addi s7, zero, 2
-        addi s9, zero, 15
+	addi a1, zero, 8	# salva valor digitado em num_linhas
+	addi a4, zero, 1
+	addi s5, zero, 9
+	addi s6, zero, -1
+	addi s7, zero, 2
+	addi s9, zero, 15
 
-        add a3, zero, zero   # seta valor para a variável de controle o fim do jogo
+	add a3, zero, zero	# seta valor para a variável de controle o fim do jogo
 
-        la a0, campo           # parâmetro da matriz campo (int * campo[])
-        add a1, a1, zero     # parâmetro do tamanho da matriz campo (int num_linhas)
-        jal insere_bombas       # chama função para inserir as bombas na matriz campo
+	la a0, campo		# parâmetro da matriz campo (int * campo[])
+	add a1, a1, zero	# parâmetro do tamanho da matriz campo (int num_linhas)
+	jal insere_bombas	# chama função para inserir as bombas na matriz campo
 	
 	addi a1, zero, 8
-        la a0, campo           # parâmetro da matriz campo (int * campo[])
-        add a1, a1, zero     # parâmetro do tamanho da matriz campo (int num_linhas)
-        jal calcula_bombas      # chama função para calcular todas as bombas ao redor de todas as posições
+	la a0, campo           # parâmetro da matriz campo (int * campo[])
+	add a1, a1, zero     # parâmetro do tamanho da matriz campo (int num_linhas)
+	jal calcula_bombas      # chama função para calcular todas as bombas ao redor de todas as posições
 
 continua_main0:
         la a0, campo           # parâmetro da matriz campo
@@ -215,7 +219,21 @@ bandeira:
         lw  s3, (a5)     # salva endereço da posição campo
         
 	bgt s3, s5, tira_flag
+	
+	
+	la a2, usuario
+        add a5, a2, s1
+        lw  s3, (a5)
+        
+        bgt s3, s6, ja_aberto
+	
 	beq s9, zero, zero_flag
+	
+	
+	la a0, campo
+        add a5, a0, s1
+
+        lw  s3, (a5) 
 	
 	addi s3, s3, 10
 	addi s9, s9, -1
@@ -268,6 +286,16 @@ tira_flag:
 	
 	j	continua
 	
+
+
+
+ja_aberto:
+	
+	la  a0, aberto       
+        li  a7, 4              
+        ecall
+	
+	j	continua
 
 
 zero_flag:
@@ -522,29 +550,29 @@ fim1:
         ret
 
 insere_bombas:                  # void insere_bombas(int * campo[], int num_linhas);
-        # codigo da função insere bombas aqui
-       	 la	t0, salva_S0
-		sw  	s0, 0 (t0)		# salva conteudo de s0 na memoria
-		la	t0, salva_ra
-		sw  	ra, 0 (t0)		# salva conteudo de ra na memoria
+        
+       	la	t0, salva_S0
+	sw  	s0, 0 (t0)		# salva conteudo de s0 na memoria
+	la	t0, salva_ra
+	sw  	ra, 0 (t0)		# salva conteudo de ra na memoria
 		
-		add 	t0, zero, a0		# salva a0 em t0 - endereço da matriz campo
-		add 	t1, zero, a1		# salva a1 em t1 - quantidade de linhas 
+	add 	t0, zero, a0		# salva a0 em t0 - endereço da matriz campo
+	add 	t1, zero, a1		# salva a1 em t1 - quantidade de linhas 
 
 QTD_BOMBAS:
-		addi 	t2, zero, 15 		# seta para 15 bombas	
-		add 	t3, zero, zero 	# inicia contador de bombas com 0
-		addi 	a7, zero, 30 		# ecall 30 pega o tempo do sistema em milisegundos (usado como semente
-		ecall 				
-		add 	a1, zero, a0		# coloca a semente em a1
+	addi 	t2, zero, 15 		# seta para 15 bombas	
+	add 	t3, zero, zero 	# inicia contador de bombas com 0
+	addi 	a7, zero, 30 		# ecall 30 pega o tempo do sistema em milisegundos (usado como semente
+	ecall 				
+	add 	a1, zero, a0		# coloca a semente em a1
 INICIO_LACO:
-		beq 	t2, t3, FIM_LACO
-		add 	a0, zero, t1 		# carrega limite para %	(resto da divisão)
-		jal 	PSEUDO_RAND
-		add 	t4, zero, a0		# pega linha sorteada e coloca em t4
-		add 	a0, zero, t1 		# carrega limite para % (resto da divisão)
-   		jal 	PSEUDO_RAND
-		add 	t5, zero, a0		# pega coluna sorteada e coloca em t5
+	beq 	t2, t3, FIM_LACO
+	add 	a0, zero, t1 		# carrega limite para %	(resto da divisão)
+	jal 	PSEUDO_RAND
+	add 	t4, zero, a0		# pega linha sorteada e coloca em t4
+	add 	a0, zero, t1 		# carrega limite para % (resto da divisão)
+	jal 	PSEUDO_RAND
+	add 	t5, zero, a0		# pega coluna sorteada e coloca em t5
 
 ###############################################################################
 # imprime valores na tela (para debug somente) - retirar comentarios para ver
@@ -569,26 +597,26 @@ INICIO_LACO:
 ##########################################################################	
 
 LE_POSICAO:	
-		mul  	t4, t4, t1
-		add  	t4, t4, t5  		# calcula (L * tam) + C
-		add  	t4, t4, t4  		# multiplica por 2
-		add  	t4, t4, t4  		# multiplica por 4
-		add  	t4, t4, t0  		# calcula Base + deslocamento
-		lw   	t5, 0(t4)   		# Le posicao de memoria LxC
+	mul  	t4, t4, t1
+	add  	t4, t4, t5  		# calcula (L * tam) + C
+	add  	t4, t4, t4  		# multiplica por 2
+	add  	t4, t4, t4  		# multiplica por 4
+	add  	t4, t4, t0  		# calcula Base + deslocamento
+	lw   	t5, 0(t4)   		# Le posicao de memoria LxC
 VERIFICA_BOMBA:		
-		addi 	t6, zero, 9		# se posição sorteada já possui bomba
-		beq  	t5, t6, PULA_ATRIB	# pula atribuição 
-		sw   	t6, 0(t4)		# senão coloca 9 (bomba) na posição
-		addi 	t3, t3, 1		# incrementa quantidade de bombas sorteadas
+	addi 	t6, zero, 9		# se posição sorteada já possui bomba
+	beq  	t5, t6, PULA_ATRIB	# pula atribuição 
+	sw   	t6, 0(t4)		# senão coloca 9 (bomba) na posição
+	addi 	t3, t3, 1		# incrementa quantidade de bombas sorteadas
 PULA_ATRIB:
-		j	INICIO_LACO
+	j	INICIO_LACO
 
 FIM_LACO:					# recupera registradores salvos
-		la	t0, salva_S0
-		lw  	s0, 0(t0)		# recupera conteudo de s0 da memória
-		la	t0, salva_ra
-		lw  	ra, 0(t0)		# recupera conteudo de ra da memória		
-		ret			# retorna para funcao que fez a chamada
+	la	t0, salva_S0
+	lw  	s0, 0(t0)		# recupera conteudo de s0 da memória
+	la	t0, salva_ra
+	lw  	ra, 0(t0)		# recupera conteudo de ra da memória		
+	ret			# retorna para funcao que fez a chamada
 		
 ##################################################################
 # PSEUDO_RAND
@@ -606,18 +634,18 @@ FIM_LACO:					# recupera registradores salvos
 # }  
 
 PSEUDO_RAND:
-		addi t6, zero, 125  		# carrega constante t6 = 125
-		lui  t5, 682			# carrega constante t5 = 2796203
-		addi t5, t5, 1697 		# 
-		addi t5, t5, 1034 		# 	
-		mul  a1, a1, t6			# a = a * 125
-		rem  a1, a1, t5			# a = a % 2796203
-		rem  a0, a1, a0			# a % lim
-		bge  a0, zero, EH_POSITIVO  	# testa se valor eh positivo
-		addi t4, zero, -1           	# caso não 
-		mul  a0, a0, t4		    	# transforma em positivo
+	addi t6, zero, 125  		# carrega constante t6 = 125
+	lui  t5, 682			# carrega constante t5 = 2796203
+	addi t5, t5, 1697 		# 
+	addi t5, t5, 1034 		# 	
+	mul  a1, a1, t6			# a = a * 125
+	rem  a1, a1, t5			# a = a % 2796203
+	rem  a0, a1, a0			# a % lim
+	bge  a0, zero, EH_POSITIVO  	# testa se valor eh positivo
+	addi t4, zero, -1           	# caso não 
+	mul  a0, a0, t4		    	# transforma em positivo
 EH_POSITIVO:	
-		ret				# retorna em a0 o valor obtido
+	ret				# retorna em a0 o valor obtido
 ############################################################################
 
        # ret
